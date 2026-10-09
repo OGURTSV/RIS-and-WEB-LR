@@ -17,5 +17,14 @@
 
 ## Документы
 
-- `docs/project-proposal.md` — заявка на тему
-- `docs/lab-01-requirements.md` — требования (ТЗ)
+### ЛР1. Анализ и требования
+
+- [docs/project-proposal.md](docs/project-proposal.md) — заявка на тему
+- [docs/lab-01-requirements.md](docs/lab-01-requirements.md) — требования (ТЗ)
+
+### ЛР2. Архитектура и модель данных
+
+- [docs/architecture.md](docs/architecture.md) — схема из трёх узлов: Vue `:5173` → ASP.NET Core `:5000` → PostgreSQL `:5432`
+- [docs/data-model.md](docs/data-model.md) — словарь проекта, сущности, ER-диаграмма, проверка 3НФ
+- [docs/api-contract.md](docs/api-contract.md) — таблица API, статусы и переходы, примеры JSON
+- [docs/requirements-matrix.md](docs/requirements-matrix.md) — критерий ЛР1 → поле → запрос
