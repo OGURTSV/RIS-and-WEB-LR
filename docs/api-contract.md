@@ -32,10 +32,10 @@
 | `POST /api/auth/login` | `login`, `password` | `200`, текущий пользователь | `400`, `401` | экран входа |
 | `POST /api/auth/logout` | — | `204` | — | выход |
 | `GET /api/auth/me` | — | `200`, текущий пользователь | `401` | кто вошёл, какая роль |
-| `GET /api/service-accounts` | — | `200`, массив или `[]` | `401` | выпадающий список при создании задачи |
+| `GET /api/service-accounts` | — | `200`, массив учёток с `riskLevel` и `riskFactors` или `[]` | `401` | выпадающий список при создании задачи с уровнем риска (ФТ-13), пример в 5.6 |
 | `GET /api/users?role=SysAdmin` | — | `200`, массив или `[]` | `401`, `403` | выпадающий список исполнителей у координатора |
 
-Справочник учётных записей в семестре только читается (заполняется seed-данными), поэтому `POST`/`PATCH` для него не планируются.
+Справочник учётных записей в семестре только читается (заполняется seed-данными), поэтому `POST`/`PATCH` для него не планируются. Уровень риска клиент тоже никогда не присылает: его считает сервер (правило — в [модели данных, 2.5](data-model.md#25-уровень-риска-учётной-записи-вычисляется-не-хранится)).
 
 ## 3. Статусы и переходы
 
@@ -268,3 +268,52 @@ stateDiagram-v2
 
 - `400` — `"status": "Done"` (неизвестный код) или `Closed` без `result`;
 - `404` — задачи нет.
+
+### 5.6. Справочник учётных записей с уровнем риска — `GET /api/service-accounts`
+
+Ответ `200 OK` (ФТ-13):
+
+```json
+[
+  {
+    "id": 1,
+    "samAccountName": "svc_sql_1c",
+    "ownerName": "Смирнов П. А.",
+    "relatedSystems": "1С, СУБД бухгалтерии",
+    "isPrivileged": false,
+    "passwordNeverExpires": false,
+    "isGmsaCompatible": true,
+    "isEnabled": true,
+    "riskLevel": "Low",
+    "riskFactors": []
+  },
+  {
+    "id": 2,
+    "samAccountName": "svc_web",
+    "ownerName": "Кузнецова Е. В.",
+    "relatedSystems": "Корпоративный портал",
+    "isPrivileged": false,
+    "passwordNeverExpires": true,
+    "isGmsaCompatible": true,
+    "isEnabled": true,
+    "riskLevel": "Medium",
+    "riskFactors": ["PasswordNeverExpires"]
+  },
+  {
+    "id": 3,
+    "samAccountName": "svc_backup",
+    "ownerName": null,
+    "relatedSystems": "Система резервного копирования",
+    "isPrivileged": true,
+    "passwordNeverExpires": true,
+    "isGmsaCompatible": true,
+    "isEnabled": true,
+    "riskLevel": "High",
+    "riskFactors": ["NoOwner", "PasswordNeverExpires", "Privileged"]
+  }
+]
+```
+
+`riskLevel` и `riskFactors` в таблице `service_accounts` **не хранятся**: сервер вычисляет их из `ownerName`, `passwordNeverExpires` и `isPrivileged` при каждом запросе (3 фактора у `svc_backup` → `High`). На экране создания задачи Vue показывает их подписями из [словаря](data-model.md#1-словарь-проекта), например «svc_backup — Высокий».
+
+Если учёток нет — `200 OK` и `[]`.

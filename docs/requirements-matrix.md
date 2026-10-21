@@ -31,6 +31,7 @@
 | ФТ-10. Запреты по ролям | `User.role`, `createdByUserId`, `assigneeUserId` | любой запрос → `403` |
 | ФТ-11. Без входа — только экран входа | `User`, сессия | `POST /api/auth/login`; остальные запросы → `401` |
 | ФТ-12. Автор не может быть исполнителем | `createdByUserId` ≠ `assigneeUserId` | `PATCH /api/tasks/{id}/assignee` → `409` |
+| ФТ-13. Уровень риска учётной записи | `ServiceAccount`: `ownerName`, `passwordNeverExpires`, `isPrivileged` → вычисляемые `riskLevel`, `riskFactors` (правило — [модель данных, 2.5](data-model.md#25-уровень-риска-учётной-записи-вычисляется-не-хранится)) | `GET /api/service-accounts` → `200`, у каждой учётки `riskLevel` и `riskFactors` |
 
 ## 3. Нефункциональные требования, влияющие на модель
 
