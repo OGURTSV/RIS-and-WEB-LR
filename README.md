@@ -25,7 +25,9 @@ npm install
 npm run dev
 ```
 
-Клиент откроется на `http://localhost:5173`. Сервера и базы пока нет: данные тестовые, кнопка «Создать» ничего не сохраняет. Остановить — `Ctrl+C` в терминале.
+Клиент откроется на `http://localhost:5173`. Страницы: `/` — список задач, `/new` — создание задачи, `/login` — вход; каждый адрес можно открыть напрямую. Сервера и базы пока нет: данные тестовые, кнопка «Создать» ничего не сохраняет. Остановить — `Ctrl+C` в терминале.
+
+После `git pull` снова выполните `npm install`, если в `package.json` появились новые библиотеки (например, `vue-router` в ЛР4).
 
 Vite явно слушает `127.0.0.1` (`frontend/vite.config.js`), чтобы страница открывалась и при включённом системном прокси / VPN.
 
@@ -45,4 +47,12 @@ Vite явно слушает `127.0.0.1` (`frontend/vite.config.js`), чтобы
 
 ### ЛР3. Каркас Vue и три экрана
 
-- [frontend/src/App.vue](frontend/src/App.vue) — экраны «Задачи», «Создать задачу», «Вход», переключение через `v-if`
+- [frontend/](frontend/) — проект Vue 3 + Vite (JavaScript): экраны «Задачи», «Создать задачу», «Вход»
+
+### ЛР4. Компоненты и маршруты Vue
+
+- [frontend/src/router.js](frontend/src/router.js) — маршруты `/`, `/new`, `/login`
+- [frontend/src/App.vue](frontend/src/App.vue) — `AppHeader` снаружи `router-view`
+- [frontend/src/components/](frontend/src/components/) — `AppHeader` (меню на `router-link`), `TaskTable` (таблица, данные через prop `items`)
+- [frontend/src/pages/](frontend/src/pages/) — страницы `TaskList`, `TaskNew`, `Login`
+- [frontend/src/tasksStore.js](frontend/src/tasksStore.js) — единственный общий массив задач
