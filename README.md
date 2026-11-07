@@ -25,7 +25,7 @@ npm install
 npm run dev
 ```
 
-Клиент откроется на `http://localhost:5173`. Страницы: `/` — список задач, `/new` — создание задачи, `/login` — вход; каждый адрес можно открыть напрямую. Сервера и базы пока нет: данные тестовые, кнопка «Создать» ничего не сохраняет. Остановить — `Ctrl+C` в терминале.
+Клиент откроется на `http://localhost:5173`. Страницы: `/` — список задач, `/new` — создание задачи, `/login` — вход; каждый адрес можно открыть напрямую. Сервера и базы пока нет: задачи хранятся в памяти браузера, новая задача из формы видна в списке до перезагрузки страницы (F5). Остановить — `Ctrl+C` в терминале.
 
 После `git pull` снова выполните `npm install`, если в `package.json` появились новые библиотеки (например, `vue-router` в ЛР4).
 
@@ -56,3 +56,9 @@ Vite явно слушает `127.0.0.1` (`frontend/vite.config.js`), чтобы
 - [frontend/src/components/](frontend/src/components/) — `AppHeader` (меню на `router-link`), `TaskTable` (таблица, данные через prop `items`)
 - [frontend/src/pages/](frontend/src/pages/) — страницы `TaskList`, `TaskNew`, `Login`
 - [frontend/src/tasksStore.js](frontend/src/tasksStore.js) — единственный общий массив задач
+
+### ЛР5. Форма и список в памяти
+
+- [frontend/src/pages/TaskNew.vue](frontend/src/pages/TaskNew.vue) — форма на `v-model`, проверка полей, ошибки у полей, переход к списку
+- [frontend/src/tasksStore.js](frontend/src/tasksStore.js) — `addItem`: новая задача со статусом `New` и уникальным `id`
+- [docs/reports/lab-05.md](docs/reports/lab-05.md) — отчёт: три проверки (успех, отказ, память) и ответы на вопросы
