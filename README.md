@@ -84,7 +84,7 @@ dotnet run
 
 - [frontend/src/pages/TaskNew.vue](frontend/src/pages/TaskNew.vue) — форма на `v-model`, проверка полей, ошибки у полей, переход к списку
 - `frontend/src/tasksStore.js` — `addItem`: новая задача со статусом `New` и уникальным `id` (в ЛР6 заменено на `createTask` из API-модуля)
-- [docs/reports/lab-05.md](docs/reports/lab-05.md) — отчёт: три проверки (успех, отказ, память) и ответы на вопросы
+- [docs/reports/lab-05.md](docs/reports/lab-05.md) — отчёт: три проверки (успех, отказ, память)
 
 ### ЛР6. Клиент API, mock и состояния интерфейса
 
@@ -93,7 +93,7 @@ dotnet run
 - [frontend/src/pages/TaskList.vue](frontend/src/pages/TaskList.vue) — состояния «загрузка / пусто / данные / ошибка»
 - [frontend/src/pages/TaskNew.vue](frontend/src/pages/TaskNew.vue) — блокировка кнопки на время запроса, сообщения об отказах
 - [frontend/.env.example](frontend/.env.example) — образец `.env` с адресом API
-- [docs/reports/lab-06.md](docs/reports/lab-06.md) — отчёт: проверки состояний и отказов, Network, ответы на вопросы
+- [docs/reports/lab-06.md](docs/reports/lab-06.md) — отчёт: проверки состояний и отказов, Network
 
 ### ЛР7. Каркас ASP.NET Core Web API
 
@@ -102,4 +102,4 @@ dotnet run
 - [backend/Controllers/SystemController.cs](backend/Controllers/SystemController.cs) — `GET /health`, `GET /info`
 - [backend/Services/](backend/Services/) — `IAppInfoService` и его реализация `AppInfoService`
 - [backend/Models/AppInfo.cs](backend/Models/AppInfo.cs) — модель ответа `/info`; [backend/Data/](backend/Data/) — заготовка под хранение данных
-- [docs/reports/lab-07.md](docs/reports/lab-07.md) — отчёт: проверки, чеклист «/health ≠ создание», DI, ответы на вопросы
+- [docs/reports/lab-07.md](docs/reports/lab-07.md) — отчёт: проверки, чеклист «/health ≠ создание», DI
