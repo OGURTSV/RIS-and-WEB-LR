@@ -21,11 +21,14 @@
 
 ```bash
 cd frontend
+cp .env.example .env
 npm install
 npm run dev
 ```
 
-Клиент откроется на `http://localhost:5173`. Страницы: `/` — список задач, `/new` — создание задачи, `/login` — вход; каждый адрес можно открыть напрямую. Сервера и базы пока нет: задачи хранятся в памяти браузера, новая задача из формы видна в списке до перезагрузки страницы (F5). Остановить — `Ctrl+C` в терминале.
+`.env` хранит адрес API-сервера (`VITE_API_BASE_URL`) и в Git не попадает; создать его нужно один раз. После изменения `.env` перезапустите `npm run dev`.
+
+Клиент откроется на `http://localhost:5173`. Страницы: `/` — список задач, `/new` — создание задачи, `/login` — вход; каждый адрес можно открыть напрямую. Сервера и базы пока нет: данные отдаёт заглушка `src/api/mockTasks.js` (переключатель `USE_MOCK` в `src/api/tasks.js`), новые задачи видны до перезагрузки страницы (F5). Остановить — `Ctrl+C` в терминале.
 
 После `git pull` снова выполните `npm install`, если в `package.json` появились новые библиотеки (например, `vue-router` в ЛР4).
 
@@ -60,5 +63,14 @@ Vite явно слушает `127.0.0.1` (`frontend/vite.config.js`), чтобы
 ### ЛР5. Форма и список в памяти
 
 - [frontend/src/pages/TaskNew.vue](frontend/src/pages/TaskNew.vue) — форма на `v-model`, проверка полей, ошибки у полей, переход к списку
-- [frontend/src/tasksStore.js](frontend/src/tasksStore.js) — `addItem`: новая задача со статусом `New` и уникальным `id`
+- `frontend/src/tasksStore.js` — `addItem`: новая задача со статусом `New` и уникальным `id` (в ЛР6 заменено на `createTask` из API-модуля)
 - [docs/reports/lab-05.md](docs/reports/lab-05.md) — отчёт: три проверки (успех, отказ, память) и ответы на вопросы
+
+### ЛР6. Клиент API, mock и состояния интерфейса
+
+- [frontend/src/api/tasks.js](frontend/src/api/tasks.js) — `getTasks`, `createTask`, переключатель `USE_MOCK`, разбор ошибок (400 / 500 / нет связи)
+- [frontend/src/api/mockTasks.js](frontend/src/api/mockTasks.js) — заглушка сервера с задержкой и учебными отказами
+- [frontend/src/pages/TaskList.vue](frontend/src/pages/TaskList.vue) — состояния «загрузка / пусто / данные / ошибка»
+- [frontend/src/pages/TaskNew.vue](frontend/src/pages/TaskNew.vue) — блокировка кнопки на время запроса, сообщения об отказах
+- [frontend/.env.example](frontend/.env.example) — образец `.env` с адресом API
+- [docs/reports/lab-06.md](docs/reports/lab-06.md) — отчёт: проверки состояний и отказов, Network, ответы на вопросы

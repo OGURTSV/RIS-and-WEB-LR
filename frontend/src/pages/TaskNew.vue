@@ -4,14 +4,18 @@ import { useRouter } from 'vue-router'
 
 import { riskLabels, riskFactorLabels } from '../labels.js'
 import { serviceAccounts } from '../serviceAccounts.js'
-import { addItem } from '../tasksStore.js'
+import { createTask, errorMessage, ApiError } from '../api/tasks.js'
 
 const router = useRouter()
 
-// Три поля из ЛР2; id, number и status ставит addItem (потом — сервер)
+// Три поля из ЛР2; id, number и status выдаёт сервер в ответе
 const form = ref({ title: '', serviceAccountId: null, description: '' })
 // Текст ошибки для каждого поля; пустая строка — ошибки нет
 const errors = ref({ title: '', serviceAccountId: '', description: '' })
+// true, пока ждём ответ на POST: кнопка заблокирована, второй клик ничего не делает
+const isSubmitting = ref(false)
+// Общее сообщение об отказе сервера или отсутствии связи
+const submitError = ref('')
 
 const selectedAccount = computed(() =>
   serviceAccounts.find((account) => account.id === form.value.serviceAccountId),
@@ -39,19 +43,39 @@ function validate(title, serviceAccountId, description) {
   return !errors.value.title && !errors.value.serviceAccountId && !errors.value.description
 }
 
-function onCreate() {
+async function onCreate() {
+  // Защита от двойного клика: пока первый запрос не завершился, второй не отправляем
+  if (isSubmitting.value) return
+
   const title = form.value.title.trim()
   const description = form.value.description.trim()
   const serviceAccountId = form.value.serviceAccountId
 
-  // Ранний выход: при ошибке задача не добавляется, форма остаётся заполненной
+  // Ранний выход: при ошибке в полях запрос не отправляется, форма остаётся заполненной
   if (!validate(title, serviceAccountId, description)) return
 
-  addItem({ title, serviceAccountId, description })
-
-  // Очищаем форму и переходим к списку, где уже видна новая строка
-  form.value = { title: '', serviceAccountId: null, description: '' }
-  router.push('/')
+  isSubmitting.value = true
+  submitError.value = ''
+  try {
+    await createTask({ title, serviceAccountId, description })
+    // Успех: очищаем форму и переходим к списку — он заново загрузится
+    // и покажет задачу с номером, который выдал сервер
+    form.value = { title: '', serviceAccountId: null, description: '' }
+    router.push('/')
+  } catch (error) {
+    console.error(error)
+    submitError.value = errorMessage(error)
+    // При 400 сервер говорит, какое поле не так, — показываем у поля
+    if (error instanceof ApiError && error.status === 400) {
+      for (const field of Object.keys(errors.value)) {
+        errors.value[field] = error.fieldErrors?.[field]?.[0] ?? ''
+      }
+    }
+    // Поля формы не очищаем: пользователь исправит и отправит снова
+  } finally {
+    // Снимаем блокировку при любом исходе, иначе после ошибки кнопка «зависнет»
+    isSubmitting.value = false
+  }
 }
 
 // v-focus: ставит курсор в первое поле, когда страница открывается
@@ -113,7 +137,10 @@ const vFocus = { mounted: (el) => el.focus() }
         {{ errors.description }}
       </p>
 
-      <button type="submit">Создать</button>
+      <button type="submit" :disabled="isSubmitting">
+        {{ isSubmitting ? 'Создаём…' : 'Создать' }}
+      </button>
+      <p v-if="submitError" class="error" role="alert">{{ submitError }}</p>
     </form>
   </main>
 </template>
@@ -127,5 +154,10 @@ const vFocus = { mounted: (el) => el.focus() }
 
 [aria-invalid='true'] {
   border-color: #b91c1c;
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 </style>

@@ -1,6 +1,5 @@
 <script setup>
 import { statusLabels } from '../labels.js'
-import { accountName } from '../serviceAccounts.js'
 
 // Таблица своих данных не хранит и массив не меняет: рисует то, что ей передали
 defineProps({
@@ -23,7 +22,8 @@ defineProps({
         <tr v-for="task in items" :key="task.id">
           <td>{{ task.number }}</td>
           <td>{{ task.title }}</td>
-          <td>{{ accountName(task.serviceAccountId) }}</td>
+          <!-- имя учётки приходит в ответе сервера (serviceAccountName) -->
+          <td>{{ task.serviceAccountName }}</td>
           <td>
             <span class="status" :class="`status--${task.status}`">
               {{ statusLabels[task.status] }}
