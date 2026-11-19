@@ -1,0 +1,11 @@
+# Тестовые запросы. В PyCharm / Rider / VS Code (REST Client) — кнопка ▶ слева от запроса.
+@backend_HostAddress = http://localhost:5000
+
+GET {{backend_HostAddress}}/health
+
+###
+
+GET {{backend_HostAddress}}/info
+Accept: application/json
+
+###

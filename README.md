@@ -28,11 +28,31 @@ npm run dev
 
 `.env` хранит адрес API-сервера (`VITE_API_BASE_URL`) и в Git не попадает; создать его нужно один раз. После изменения `.env` перезапустите `npm run dev`.
 
-Клиент откроется на `http://localhost:5173`. Страницы: `/` — список задач, `/new` — создание задачи, `/login` — вход; каждый адрес можно открыть напрямую. Сервера и базы пока нет: данные отдаёт заглушка `src/api/mockTasks.js` (переключатель `USE_MOCK` в `src/api/tasks.js`), новые задачи видны до перезагрузки страницы (F5). Остановить — `Ctrl+C` в терминале.
+Клиент откроется на `http://localhost:5173`. Страницы: `/` — список задач, `/new` — создание задачи, `/login` — вход; каждый адрес можно открыть напрямую. Клиент пока не подключён к серверу: данные отдаёт заглушка `src/api/mockTasks.js` (переключатель `USE_MOCK` в `src/api/tasks.js`), новые задачи видны до перезагрузки страницы (F5). Остановить — `Ctrl+C` в терминале.
 
 После `git pull` снова выполните `npm install`, если в `package.json` появились новые библиотеки (например, `vue-router` в ЛР4).
 
 Vite явно слушает `127.0.0.1` (`frontend/vite.config.js`), чтобы страница открывалась и при включённом системном прокси / VPN.
+
+## Запуск сервера (ASP.NET Core)
+
+Нужен .NET SDK 8 или новее (проект — `net9.0`); проверить: `dotnet --version`.
+
+```bash
+cd backend
+dotnet restore
+dotnet run
+```
+
+В терминале должно появиться `Now listening on: http://localhost:5000`. Остановить — `Ctrl+C`.
+
+- **API:** `http://localhost:5000`
+- **Swagger:** `http://localhost:5000/swagger` (корень `http://localhost:5000/` переадресует туда же; работает в среде `Development`, она задана в `backend/Properties/launchSettings.json`)
+- `GET /health` → `200`, `ok` — проверяет только, что процесс сервера запущен и отвечает (liveness). Создание задач и базу данных он **не** проверяет.
+- `GET /info` → название, версия, среда и время запуска сервера.
+- Готовые запросы для проверки — в `backend/backend.http` (в PyCharm кнопка ▶ слева от запроса).
+
+Задач сервер пока не хранит. Настоящее создание задачи (`POST /api/tasks`) появится в ЛР8; до базы данных (ЛР10) задачи будут храниться в памяти сервера и пропадать после его перезапуска.
 
 ## Документы
 
@@ -74,3 +94,12 @@ Vite явно слушает `127.0.0.1` (`frontend/vite.config.js`), чтобы
 - [frontend/src/pages/TaskNew.vue](frontend/src/pages/TaskNew.vue) — блокировка кнопки на время запроса, сообщения об отказах
 - [frontend/.env.example](frontend/.env.example) — образец `.env` с адресом API
 - [docs/reports/lab-06.md](docs/reports/lab-06.md) — отчёт: проверки состояний и отказов, Network, ответы на вопросы
+
+### ЛР7. Каркас ASP.NET Core Web API
+
+- [backend/](backend/) — проект ASP.NET Core (`net9.0`), порт `5000`, Swagger
+- [backend/Program.cs](backend/Program.cs) — регистрация сервисов (DI), Swagger, контроллеры
+- [backend/Controllers/SystemController.cs](backend/Controllers/SystemController.cs) — `GET /health`, `GET /info`
+- [backend/Services/](backend/Services/) — `IAppInfoService` и его реализация `AppInfoService`
+- [backend/Models/AppInfo.cs](backend/Models/AppInfo.cs) — модель ответа `/info`; [backend/Data/](backend/Data/) — заготовка под хранение данных
+- [docs/reports/lab-07.md](docs/reports/lab-07.md) — отчёт: проверки, чеклист «/health ≠ создание», DI, ответы на вопросы

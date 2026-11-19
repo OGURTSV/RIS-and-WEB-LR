@@ -7,3 +7,5 @@ dist/
 bin/
 obj/
 .env
+.vs/
+*.user
