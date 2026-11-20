@@ -1,0 +1,288 @@
+{
+  "info": {
+    "name": "ИС «Риски сервисных учётных записей AD» — задачи (ЛР8)",
+    "description": "Импорт: Postman → Import → этот файл. Сервер: cd backend, dotnet run (http://localhost:5000). Запускать по порядку на только что запущенном сервере (Run collection): данные в памяти, после перезапуска сервера список снова пустой. Ожидания: 201 / 400 / 404 / 409.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "taskId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "01 GET list — 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 и массив (на новом сервере — [])', () => {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json()).to.be.an('array');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/tasks"
+      }
+    },
+    {
+      "name": "02 POST create — 201",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201, есть id и number, статус New, исполнителя нет', () => {",
+              "  pm.response.to.have.status(201);",
+              "  const t = pm.response.json();",
+              "  pm.expect(t.id).to.be.a('number');",
+              "  pm.expect(t.number).to.match(/^SAR-\\d{4}-\\d{4}$/);",
+              "  pm.expect(t.status).to.eql('New');",
+              "  pm.expect(t.assigneeUserId).to.eql(null);",
+              "  pm.collectionVariables.set('taskId', t.id);",
+              "});",
+              "pm.test('заголовок Location указывает на новую задачу', () => {",
+              "  pm.expect(pm.response.headers.get('Location')).to.include('/api/tasks/');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Бессрочный пароль у svc_backup\",\n  \"serviceAccountId\": 3,\n  \"description\": \"Пароль не менялся с 2021 года, флаг PasswordNeverExpires. Сменить пароль и перевести учётку на gMSA.\"\n}"
+        },
+        "url": "{{baseUrl}}/api/tasks"
+      }
+    },
+    {
+      "name": "03 POST short title — 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400 и ошибка у поля title', () => {",
+              "  pm.response.to.have.status(400);",
+              "  pm.expect(pm.response.json().errors).to.have.property('title');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Нет\",\n  \"serviceAccountId\": 3,\n  \"description\": \"Пароль не менялся с 2021 года.\"\n}"
+        },
+        "url": "{{baseUrl}}/api/tasks"
+      }
+    },
+    {
+      "name": "04 GET by id — 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200, та самая задача', () => {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get('taskId')));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/tasks/{{taskId}}"
+      }
+    },
+    {
+      "name": "05 GET by missing id — 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('404', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/tasks/999999"
+      }
+    },
+    {
+      "name": "06 PATCH status without assignee — 409",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('409: в работу без исполнителя нельзя', () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"InProgress\"\n}"
+        },
+        "url": "{{baseUrl}}/api/tasks/{{taskId}}/status"
+      }
+    },
+    {
+      "name": "07 PATCH assignee — 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200, исполнитель назначен, статус остался New', () => {",
+              "  pm.response.to.have.status(200);",
+              "  const t = pm.response.json();",
+              "  pm.expect(t.assigneeUserId).to.eql(5);",
+              "  pm.expect(t.status).to.eql('New');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"assigneeUserId\": 5\n}"
+        },
+        "url": "{{baseUrl}}/api/tasks/{{taskId}}/assignee"
+      }
+    },
+    {
+      "name": "08 PATCH status InProgress — 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200, статус InProgress, исполнитель не изменился', () => {",
+              "  pm.response.to.have.status(200);",
+              "  const t = pm.response.json();",
+              "  pm.expect(t.status).to.eql('InProgress');",
+              "  pm.expect(t.assigneeUserId).to.eql(5);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"InProgress\"\n}"
+        },
+        "url": "{{baseUrl}}/api/tasks/{{taskId}}/status"
+      }
+    },
+    {
+      "name": "09 PATCH status Closed with result — 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200, статус Closed, результат сохранён', () => {",
+              "  pm.response.to.have.status(200);",
+              "  const t = pm.response.json();",
+              "  pm.expect(t.status).to.eql('Closed');",
+              "  pm.expect(t.result).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"Closed\",\n  \"result\": \"Учётка переведена на gMSA, флаг PasswordNeverExpires снят.\"\n}"
+        },
+        "url": "{{baseUrl}}/api/tasks/{{taskId}}/status"
+      }
+    },
+    {
+      "name": "10 PATCH status Closed → InProgress — 409",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('409: из Closed назад нельзя', () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"InProgress\"\n}"
+        },
+        "url": "{{baseUrl}}/api/tasks/{{taskId}}/status"
+      }
+    },
+    {
+      "name": "11 GET service-accounts with risk — 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200, у каждой учётки есть riskLevel', () => {",
+              "  pm.response.to.have.status(200);",
+              "  pm.response.json().forEach(a => pm.expect(['Low', 'Medium', 'High']).to.include(a.riskLevel));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/service-accounts"
+      }
+    }
+  ]
+}

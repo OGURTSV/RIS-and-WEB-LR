@@ -50,9 +50,28 @@ dotnet run
 - **Swagger:** `http://localhost:5000/swagger` (корень `http://localhost:5000/` переадресует туда же; работает в среде `Development`, она задана в `backend/Properties/launchSettings.json`)
 - `GET /health` → `200`, `ok` — проверяет только, что процесс сервера запущен и отвечает (liveness). Создание задач и базу данных он **не** проверяет.
 - `GET /info` → название, версия, среда и время запуска сервера.
-- Готовые запросы для проверки — в `backend/backend.http` (в PyCharm кнопка ▶ слева от запроса).
+- Готовые запросы для проверки — в `backend/backend.http` (в PyCharm кнопка ▶ слева от запроса) и коллекция Postman `docs/api-collection/tasks.postman_collection.json` (Import → файл → Run collection).
 
-Задач сервер пока не хранит. Настоящее создание задачи (`POST /api/tasks`) появится в ЛР8; до базы данных (ЛР10) задачи будут храниться в памяти сервера и пропадать после его перезапуска.
+**Данные пока хранятся в памяти сервера.** После перезапуска (`Ctrl+C`, `dotnet run`) список задач снова пустой, а номера начинаются с `SAR-2026-0001`. Учётные записи и пользователи — тестовые данные, они создаются заново при каждом запуске. База данных PostgreSQL появится в ЛР10.
+
+### Адреса API (ЛР8)
+
+Главный объект — **задача по устранению риска** (`RiskTask`), ресурс `/api/tasks`. Имена полей — из [docs/data-model.md](docs/data-model.md), подробный контракт — [docs/api-contract.md](docs/api-contract.md).
+
+| Метод и путь | Тело | Успех | Отказы |
+|---|---|---|---|
+| `GET /api/tasks` | — | `200`, массив или `[]` | — |
+| `GET /api/tasks/{id}` | — | `200` | `404` |
+| `POST /api/tasks` | `title` (5–80), `serviceAccountId` (> 0, есть в справочнике), `description` (10–500) | `201`, `id`, `number`, `status: "New"` | `400` |
+| `PATCH /api/tasks/{id}/assignee` | `assigneeUserId`, `dueDate` (необязательно) | `200`, статус не меняется | `400`, `404`, `409` |
+| `PATCH /api/tasks/{id}/status` | `status`, `result` (для `Closed`) | `200`, исполнитель не меняется | `400`, `404`, `409` |
+| `GET /api/service-accounts` | — | `200`, учётки с `riskLevel` и `riskFactors` | — |
+
+- Статусы: `New`, `InProgress`, `Closed`, `Cancelled`. Переходы: `New` → `InProgress` (только если назначен исполнитель, иначе `409`), `New` → `Cancelled`, `InProgress` → `Closed` (нужен `result`), `InProgress` → `Cancelled`; остальные — `409`.
+- Исполнитель — только пользователь с ролью `SysAdmin` (тестовые: `4` Волков С. Е., `5` Петров И. В.) и только у задачи в статусе `New`; иначе `409`.
+- `id`, `number`, `status` и автора задаёт сервер: если клиент их пришлёт, они игнорируются. Входа в систему пока нет, поэтому автор новых задач — тестовый аналитик `2` Иванова А. С.
+- Удаления (`DELETE`) нет: задача отменяется статусом `Cancelled`.
+- Неожиданный сбой → `500` с общим сообщением, без подробностей; причина пишется одной строкой в лог сервера.
 
 ## Документы
 
@@ -103,3 +122,13 @@ dotnet run
 - [backend/Services/](backend/Services/) — `IAppInfoService` и его реализация `AppInfoService`
 - [backend/Models/AppInfo.cs](backend/Models/AppInfo.cs) — модель ответа `/info`; [backend/Data/](backend/Data/) — заготовка под хранение данных
 - [docs/reports/lab-07.md](docs/reports/lab-07.md) — отчёт: проверки, чеклист «/health ≠ создание», DI
+### ЛР8. REST: создание, чтение, назначение и статус
+
+- [backend/Controllers/TasksController.cs](backend/Controllers/TasksController.cs) — `/api/tasks`: список, одна задача, создание, два отдельных `PATCH` (`/assignee`, `/status`)
+- [backend/Controllers/ServiceAccountsController.cs](backend/Controllers/ServiceAccountsController.cs) — `GET /api/service-accounts` с уровнем риска
+- [backend/Dtos/](backend/Dtos/) — что клиент присылает (`CreateTaskRequest`, `AssignTaskRequest`, `ChangeTaskStatusRequest`) и получает (`TaskResponse`, `ServiceAccountResponse`)
+- [backend/Services/TaskService.cs](backend/Services/TaskService.cs) — правила процесса (переходы статусов, кого можно назначить)
+- [backend/Services/RiskCalculator.cs](backend/Services/RiskCalculator.cs) — расчёт уровня риска учётной записи
+- [backend/Data/InMemoryStore.cs](backend/Data/InMemoryStore.cs) — хранилище в памяти и тестовые данные
+- [docs/api-collection/tasks.postman_collection.json](docs/api-collection/tasks.postman_collection.json) — коллекция запросов: `201`, `400`, `404`, `409`
+- [docs/reports/lab-08.md](docs/reports/lab-08.md) — отчёт: проверки, лог неожиданной ошибки

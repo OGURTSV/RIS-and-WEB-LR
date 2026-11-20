@@ -1,4 +1,5 @@
 # Тестовые запросы. В PyCharm / Rider / VS Code (REST Client) — кнопка ▶ слева от запроса.
+# Полная коллекция с проверками — docs/api-collection/tasks.postman_collection.json
 @backend_HostAddress = http://localhost:5000
 
 GET {{backend_HostAddress}}/health
@@ -7,5 +8,80 @@ GET {{backend_HostAddress}}/health
 
 GET {{backend_HostAddress}}/info
 Accept: application/json
+
+###
+
+# Список задач (на только что запущенном сервере — [])
+GET {{backend_HostAddress}}/api/tasks
+
+###
+
+# Создать задачу → 201
+POST {{backend_HostAddress}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Бессрочный пароль у svc_backup",
+  "serviceAccountId": 3,
+  "description": "Пароль не менялся с 2021 года, флаг PasswordNeverExpires. Сменить пароль и перевести учётку на gMSA."
+}
+
+###
+
+# Короткий заголовок → 400
+POST {{backend_HostAddress}}/api/tasks
+Content-Type: application/json
+
+{
+  "title": "Нет",
+  "serviceAccountId": 3,
+  "description": "Пароль не менялся с 2021 года."
+}
+
+###
+
+GET {{backend_HostAddress}}/api/tasks/1
+
+###
+
+# Нет такой задачи → 404
+GET {{backend_HostAddress}}/api/tasks/999999
+
+###
+
+# В работу без исполнителя → 409
+PATCH {{backend_HostAddress}}/api/tasks/1/status
+Content-Type: application/json
+
+{ "status": "InProgress" }
+
+###
+
+# Назначить исполнителя (5 — Петров И. В., SysAdmin) → 200, статус остаётся New
+PATCH {{backend_HostAddress}}/api/tasks/1/assignee
+Content-Type: application/json
+
+{ "assigneeUserId": 5, "dueDate": "2026-12-31" }
+
+###
+
+# Теперь в работу можно → 200
+PATCH {{backend_HostAddress}}/api/tasks/1/status
+Content-Type: application/json
+
+{ "status": "InProgress" }
+
+###
+
+# Закрыть с результатом → 200
+PATCH {{backend_HostAddress}}/api/tasks/1/status
+Content-Type: application/json
+
+{ "status": "Closed", "result": "Учётка переведена на gMSA, флаг PasswordNeverExpires снят." }
+
+###
+
+# Справочник учётных записей с уровнем риска
+GET {{backend_HostAddress}}/api/service-accounts
 
 ###
